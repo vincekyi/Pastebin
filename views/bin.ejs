@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+    <script src="https://cdn.firebase.com/js/client/2.3.1/firebase.js"></script>
+    <title>Bin</title>
+  </head>
+
+  <body>
+    <h1>Bin: <%= id %></h1>
+      <textarea id="content" rows="20" cols="75">
+      </textarea>
+      Last updated on
+      <span id="timestamp"></span>
+    <script>
+      var myFirebaseRef = new Firebase("https://popping-inferno-8464.firebaseio.com/");
+
+      var basePath = 'bin/<%= id %>/';
+      var bin = myFirebaseRef.child(basePath);
+
+      bin.on("value", function(snapshot) {
+        $( '#content' ).val(snapshot.val().content);
+        $( '#timestamp' ).text(timeConverter(snapshot.val().timestamp));
+      });
+
+
+      $( '#content' ).on('keyup', _.debounce( function(){
+          bin.update(
+            {
+              content: $( '#content' ).val(),
+              timestamp: Firebase.ServerValue.TIMESTAMP
+            });
+          //content.set($( '#content' ).val());
+      }, 500 ));
+
+      function timeConverter(UNIX_timestamp){
+        var a = new Date(UNIX_timestamp);
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var year = a.getFullYear();
+        var month = months[a.getMonth()];
+        var date = a.getDate();
+        var hour;
+        var amPm;
+        if( a.getHours() > 11 ){
+          hour = a.getHours() - 12;
+          amPm = "pm";
+        }
+        else {
+          amPm = "am"
+          if(a.getHours() == 0)
+            hour = 12;
+          else
+            hour = a.getHour();
+        }
+        var min = a.getMinutes();
+        var zero = "";
+        var sec = a.getSeconds();
+        if(sec < 10)
+          zero = "0";
+        var time = month + ' ' + date + ' ' + year + ' ' + hour + ':' + min + ':' +zero + sec + ' '+ amPm;
+        return time;
+      };
+    </script>
+
+  </body>
+</html>
